@@ -1,0 +1,238 @@
+
+class FieldType 
+{
+public:
+    int      getTypeId()  const;
+    bool     isPointer()  const;
+    bool     isRepeated() const;
+private:
+    uint32_t typeIdAndFlags;
+};
+
+class Field
+{
+public:
+    Field(int index, FieldType fieldType, string name);
+
+    int       getIndex();
+    FieldType getFieldType();
+    
+
+private:
+    int       index; // index
+    FieldType fieldType;
+    string    name;
+};
+
+class Type
+{
+public:
+    Type(int typeId, string name);
+
+    int     getTypeId();
+    string  getName();
+private:
+    int     typeId;
+    string  name;
+};
+
+class PrimitiveType: public Type 
+{
+public:
+    Type(int typeId, string name);
+
+    int     getSize();
+private:
+    int     size; // size in bytes
+};
+
+class CustomType: public Type
+{
+    std::vector<Field> fields;
+};
+
+
+class Schema {
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Archive 
+{
+
+
+    
+}
+
+
+
+
+
+struct A 
+{
+
+    A();
+
+    void addNumber(int num);
+
+public:
+    A*  prev;    
+    A*  next;
+
+    int i;
+
+    std::vector<int> numbers;
+
+    int transient_value;
+};
+
+|---------+---------|
+| A'      |         |
+|---------+---------|
+| type    | name    |
+|---------+---------|
+| pointer | prev    |
+| pointer | next    |
+| int     | i       |
+| int<>   | numbers |
+|---------+---------|
+
+|-----------+--------------------+--------------------+------------+---------------|
+|           |       pointer prev |       pointer next |      int i | int<> numbers |
+|-----------+--------------------+--------------------+------------+---------------|
+| Block: A' | 0x1122334455667788 | 0x1122334455667788 | 0x11223344 |    0x00000000 |
+|-----------+--------------------+--------------------+------------+---------------|
+
+struct B
+{
+   A a;
+}
+
+|------+------|
+| B'   |      |
+|------+------|
+| type | name |
+|------+------|
+| A'   | a    |
+|------+------|
+
+|-----------+--------------------|
+|           |          pointer a |
+|-----------+--------------------|
+| Block: B' | 0x1122334455667788 |
+|-----------+--------------------|
+
+struct C 
+{
+   A  a;
+   B b_vector[5];
+}
+
+|------+----------|
+| C    |          |
+|------+----------|
+| type | name     |
+|------+----------|
+| A    | a        |
+| B<>  | b_vector |
+|------+----------|
+
+|----------+--------------------+--------------------+------------+---------------+-------------------|
+|          |       pointer prev |       pointer next |      int i | int<> numbers | int b_vector.size | 
+|----------+--------------------+--------------------+------------+---------------+-------------------| 
+| Block: C | 0x1122334455667788 | 0x1122334455667788 | 0x11223344 |    0x00000000 |                 1 | ... B1 ...
+|----------+--------------------+--------------------+------------+---------------+-------------------|
+
+
+|------------|
+| Block: A<> |
+|------------|
+
+
+a << 
+
+===>
+
+| type A |
+
+
+# XDR
+struct A {
+    uint64 prev;
+    uint64 next;
+    int    i;
+    int<>  numbers;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+A::A():
+    next(nullptr),
+    prev(nullptr),
+    i(0),
+    transient_value(0)
+{}
+
+void A::addNumber(int num)
+{
+    numbers.push_back(num);
+}
+
+
+
+
+
+// serialize 
+
+std::ostream& operator<<(std::ostream& o, const mat3& m)
+{
+    o << "[";
+    const char *rsep = "";
+    for (int i=0; i<3; ++i, rsep = " ") {
+        o << rsep << "[";
+        const char *sep = "";
+        for (int j=0; j<3; ++j, sep=" , ")
+            o << sep << m(i, j);
+        o << "]";
+    }
+    return o << "]";
+}
+
+
+
